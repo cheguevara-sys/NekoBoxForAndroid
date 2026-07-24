@@ -1,4 +1,5 @@
-name: Build Guevarah VPN APK
+name: Build Guevarah VPN
+
 on:
   push:
     branches: [ master ]
@@ -7,8 +8,9 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+
     steps:
-      - name: Checkout
+      - name: Checkout code
         uses: actions/checkout@v4
 
       - name: Set up JDK 17
@@ -22,25 +24,28 @@ jobs:
         with:
           go-version: '1.21'
 
-      - name: Install Android NDK
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y android-sdk-ndk
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
 
-      - name: Build libcore.aar
+      - name: Set up Android NDK r25c
+        uses: nttld/setup-ndk@v1
+        with:
+          ndk-version: r25c
+
+      - name: Build Go core (libcore)
         run: |
           cd libcore
           chmod +x init.sh build.sh
           ./init.sh
           ./build.sh
 
-      - name: Build APK
+      - name: Build Release APK (Standard flavor)
         run: |
           chmod +x gradlew
-          ./gradlew assembleRelease --stacktrace
+          ./gradlew assembleStandardRelease --stacktrace
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
           name: Guevarah-VPN-APK
-          path: app/build/outputs/apk/release/*.apk
+          path: app/build/outputs/apk/standard/release/*.apk
